@@ -46,6 +46,7 @@ except:
 log = logging.getLogger("xhtml2pdf")
 
 MAX_IMAGE_RATIO = 0.95
+PRODUCER = "xhtml2pdf <https://github.com/xhtml2pdf/xhtml2pdf/>"
 
 
 class PTCycle(list):
@@ -93,10 +94,7 @@ class PmlBaseDoc(BaseDocTemplate):
     """
 
     def beforePage(self):
-
-        # Tricky way to set producer, because of not real privateness in Python
-        info = "pisa HTML to PDF <http://www.htmltopdf.org>"
-        self.canv._doc.info.producer = info
+        self.canv._doc.info.producer = PRODUCER
 
         '''
         # Convert to ASCII because there is a Bug in Reportlab not
@@ -227,7 +225,7 @@ class PmlPageTemplate(PageTemplate):
                 if self.pisaBackground.mimetype.startswith("image/"):
 
                     try:
-                        self.img = PmlImageReader(six.StringIO(self.pisaBackground.getData()))
+                        self.img = PmlImageReader(six.BytesIO(self.pisaBackground.getData()))
                         iw, ih = self.img.getSize()
                         pw, self.ph = canvas._pagesize
 
@@ -456,7 +454,7 @@ class PmlImageReader(object):  # TODO We need a factory here, returning either a
             # 8-bit PNGs could give an empty string as transparency value, so
             # we have to be careful here.
             try:
-                return map(ord, palette[transparency:transparency + 3])
+                return list(six.iterbytes(palette[transparency:transparency + 3]))
             except:
                 return None
         else:

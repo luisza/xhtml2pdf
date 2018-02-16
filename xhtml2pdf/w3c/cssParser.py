@@ -15,6 +15,11 @@ from __future__ import absolute_import
 # Added by benjaoming to fix python3 tests
 from __future__ import unicode_literals
 
+try:
+    from future_builtins import filter
+except ImportError:
+    pass
+
 """CSS-2.1 parser.
 
 The CSS 2.1 Specification this parser was derived from can be found at http://www.w3.org/TR/CSS21/
@@ -252,6 +257,8 @@ class CSSParseError(Exception):
 
     def setFullCSSSource(self, fullsrc, inline=False):
         self.fullsrc = fullsrc
+        if type(self.fullsrc) == six.binary_type:
+            self.fullsrc = six.text_type(self.fullsrc, 'utf-8')
         if inline:
             self.inline = inline
         if self.fullsrc:
@@ -519,6 +526,9 @@ class CSSParser(object):
             [ [ ruleset | media | page | font_face ] [S|CDO|CDC]* ]*
         ;
         """
+        # FIXME: BYTES to STR 
+        if type(src) == six.binary_type:
+            src=six.text_type(src)
         # Get rid of the comments
         src = self.re_comment.sub('', src)
 
@@ -1181,7 +1191,7 @@ class CSSParser(object):
             rexpression = self.re_string
         result = rexpression.match(src)
         if result:
-            strres = filter(None, result.groups())
+            strres = tuple(filter(None, result.groups()))
             if strres:
                 try:
                     strres = strres[0]
